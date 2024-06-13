@@ -14,6 +14,7 @@ namespace DGExcel2CSV
         
         public static void Main(string[] args)
         {
+            Console.WriteLine();
             Console.WriteLine("--------- Excel 2 CSV ---------");
             Console.WriteLine();
             
@@ -75,25 +76,56 @@ namespace DGExcel2CSV
                 var fileList = Directory.GetFiles(args[0], "*.xlsx");
                 foreach (var file in fileList)
                 {
+                    if (file.IndexOf('$') != -1)
+                        continue;
                     Convert(file);
                 }
             }
             Console.WriteLine();
             Console.WriteLine("Finished.");
+            Console.WriteLine();
+            
             return;
         }
 
         private static void Convert(string file)
         {
+            Application activeExcel = null;
+            try
+            {
+                activeExcel = (Application)Marshal.GetActiveObject("Excel.Application");
+            }
+            catch (Exception e)
+            {
+                activeExcel = null;
+            }
+            if (activeExcel != null)
+            {
+                Console.WriteLine("** Excel process is running. **");
+                return;
+            }
+            
             app = new Microsoft.Office.Interop.Excel.Application();
             workbook = app.Workbooks.Open(file);
             var csvPath = Path.ChangeExtension(file, ".csv");
             var csvFileName = Path.GetFileName(csvPath);
-            var savePath = Path.Combine(targetFolder, csvFileName); 
+            var savePath = Path.Combine(targetFolder, csvFileName);
+            savePath = savePath.Replace('/', '\\');
             Console.Write($"Converting... [{file}]");
-            
-            workbook.SaveAs(savePath, XlFileFormat.xlCSV);
-            Console.WriteLine(" Saved!");
+
+            try
+            {
+                if (File.Exists(savePath))
+                {
+                    File.Delete(savePath);
+                }
+                workbook.SaveAs(savePath, 62);
+                Console.WriteLine(" ...Saved!");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
             
             workbook.Close(false);
             app.Quit();
