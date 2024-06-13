@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Office.Interop.Excel;
 
@@ -13,15 +14,32 @@ namespace DGExcel2CSV
         
         public static void Main(string[] args)
         {
-            if (args == null || args.Length == 0) return;
+            Console.WriteLine("--------- Excel 2 CSV ---------");
+            Console.WriteLine();
+            
+            if (args == null || args.Length == 0)
+            {
+                Console.WriteLine("No arguments");
+                return;
+            }
 
-            if (args.Length > 2) return;
+            if (args.Length > 2)
+            {
+                Console.WriteLine("Too many arguments.");
+                return;
+            }
+            Console.WriteLine("Entered Arguments ---");
+            for (int i = 0; i < args.Length; i++)
+            {
+                Console.WriteLine($"\t[{i + 1}] {args[i]}");
+            }
 
             bool isFile = File.Exists(args[0]);
             bool isDirectory = Directory.Exists(args[0]); 
 
             if (isFile == false && isDirectory == false)
             {
+                Console.WriteLine($"Argument [0] is not a file or directory. {args[0]}");
                 return;
             }
             
@@ -32,8 +50,17 @@ namespace DGExcel2CSV
                 targetFolder = isFile ? Path.GetDirectoryName(args[0]) : args[0];
                 // 새 폴더 생성
                 targetFolder = Path.Combine(targetFolder, "_CSV");
+                Console.WriteLine($"Make Temp CSV output folder : {targetFolder}");
             }
-
+            else
+            {
+                targetFolder = args[1];
+            }
+            
+            Console.WriteLine();
+            Console.WriteLine($"Target folder : {targetFolder}");
+            Console.WriteLine();
+            
             if (Directory.Exists(targetFolder) == false)
             {
                 Directory.CreateDirectory(targetFolder);
@@ -51,7 +78,8 @@ namespace DGExcel2CSV
                     Convert(file);
                 }
             }
-
+            Console.WriteLine();
+            Console.WriteLine("Finished.");
             return;
         }
 
@@ -59,10 +87,13 @@ namespace DGExcel2CSV
         {
             app = new Microsoft.Office.Interop.Excel.Application();
             workbook = app.Workbooks.Open(file);
-
             var csvPath = Path.ChangeExtension(file, ".csv");
+            var csvFileName = Path.GetFileName(csvPath);
+            var savePath = Path.Combine(targetFolder, csvFileName); 
+            Console.Write($"Converting... [{file}]");
             
-            workbook.SaveAs(csvPath, XlFileFormat.xlCSV);
+            workbook.SaveAs(savePath, XlFileFormat.xlCSV);
+            Console.WriteLine(" Saved!");
             
             workbook.Close(false);
             app.Quit();
