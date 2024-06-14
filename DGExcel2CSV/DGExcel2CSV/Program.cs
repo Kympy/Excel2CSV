@@ -29,10 +29,27 @@ namespace DGExcel2CSV
                 Console.WriteLine("Too many arguments.");
                 return;
             }
+            
             Console.WriteLine("Entered Arguments ---");
             for (int i = 0; i < args.Length; i++)
             {
                 Console.WriteLine($"\t[{i + 1}] {args[i]}");
+            }
+            
+            Application activeExcel = null;
+            try
+            {
+                activeExcel = (Application)Marshal.GetActiveObject("Excel.Application");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                activeExcel = null;
+            }
+            if (activeExcel != null)
+            {
+                Console.WriteLine("** Excel process is running. **");
+                return;
             }
 
             bool isFile = File.Exists(args[0]);
@@ -85,26 +102,13 @@ namespace DGExcel2CSV
             Console.WriteLine("Finished.");
             Console.WriteLine();
             
+            GC.Collect();
+            
             return;
         }
 
         private static void Convert(string file)
         {
-            Application activeExcel = null;
-            try
-            {
-                activeExcel = (Application)Marshal.GetActiveObject("Excel.Application");
-            }
-            catch (Exception e)
-            {
-                activeExcel = null;
-            }
-            if (activeExcel != null)
-            {
-                Console.WriteLine("** Excel process is running. **");
-                return;
-            }
-            
             app = new Microsoft.Office.Interop.Excel.Application();
             workbook = app.Workbooks.Open(file);
             var csvPath = Path.ChangeExtension(file, ".csv");
@@ -132,6 +136,9 @@ namespace DGExcel2CSV
 
             Marshal.ReleaseComObject(workbook);
             Marshal.ReleaseComObject(app);
+
+            workbook = null;
+            app = null;
         }
     }
 }
